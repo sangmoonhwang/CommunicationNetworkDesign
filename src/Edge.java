@@ -14,11 +14,11 @@ public class Edge {
 		this.unitR = reliability;
 	}
 
-	public City cityFrom() {
+	public City getCityFrom() {
 		return cityFrom;
 	}
 
-	public City cityTo() {
+	public City getCityTo() {
 		return cityTo;
 	}
 
