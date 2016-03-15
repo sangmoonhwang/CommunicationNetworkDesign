@@ -5,9 +5,9 @@ public class Edge {
 
 	private double unitC; // unit cost
 	private double unitR; // unit reliability
-	private int counter;
+	private int counter = 0;
 
-	public Edge(City from, City to, int cost, int reliability) {
+	public Edge(City from, City to, double cost, double reliability) {
 		this.cityFrom = from;
 		this.cityTo = to;
 		this.unitC = cost;

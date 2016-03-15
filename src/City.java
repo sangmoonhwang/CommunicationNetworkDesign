@@ -7,15 +7,19 @@ public class City {
 	private List<Edge> edges;
 
 	private boolean isVisited;
+	private int id = -1;
 
-	public City() {
+	public City(int id) {
 		this.edges = new ArrayList<>();
+		this.setId(id);
 	}
 
-	public boolean connect(City node, int cost, int reliability) {
+	public boolean connect(City node) {
 		if (hasEdge(node)) {
 			return false;
 		}
+		double cost = CommunicationNetwork.costs[id][node.getId()];
+		double reliability = CommunicationNetwork.reliabilities[id][node.getId()];
 		Edge newEdge = new Edge(this, node, cost, reliability);
 		node.addEdge(newEdge);
 		return edges.add(newEdge);
@@ -73,4 +77,12 @@ public class City {
 		}
 		return new ArrayList<City>(neighbors);
 	}
+
+  public int getId() {
+    return id;
+  }
+
+  public void setId(int id) {
+    this.id = id;
+  }
 }
