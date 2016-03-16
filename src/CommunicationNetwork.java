@@ -69,17 +69,18 @@ public class CommunicationNetwork {
           int index = (int) (Math.random() * 10000 % citiesConnected.size());
           int con = citiesConnected.get(index);
           for (int i = 0; i < numberOfCities; i++) {
-            if (connections[i][con] != 0 && connections[i][con] < 3) { 
+            if (connections[i][con] != 0 && connections[i][con] < 3) {
               connections[i][con]++;
               connections[con][i]++;
             }
           }
-//          citiesNotConnected.add(removed);
+          // citiesNotConnected.add(removed);
           System.out.println("incremented " + con);
           continue;
         }
         int temp = citiesNotConnected.remove(c);
-        System.out.println("connected " + temp + " and " + citiesConnected.get(r));
+        System.out.println("connected " + temp + " and "
+            + citiesConnected.get(r));
         connections[citiesConnected.get(r)][temp]++;
         connections[temp][citiesConnected.get(r)]++;
         citiesConnected.add(temp);
@@ -97,10 +98,11 @@ public class CommunicationNetwork {
         }
       }
       System.out.println();
-      System.out.println(citiesConnected.size() + " and " + citiesNotConnected.size());
+      System.out.println(citiesConnected.size() + " and "
+          + citiesNotConnected.size());
       System.out.println("Cost = " + getTotalCost(connections));
       System.out.println("Reliability = " + getTotalReliability(connections));
-
+      // TODO: BORDER
     } else if ("1".equals(a_b)) {
       // case b Max Rel.
       ArrayList<Integer> citiesConnected = new ArrayList<Integer>();
@@ -108,17 +110,25 @@ public class CommunicationNetwork {
       for (int i = 0; i < numberOfCities; i++) {
         citiesNotConnected.add(i);
       }
+      System.out.println("HEREGOES");
       citiesConnected.add(citiesNotConnected.remove(0));
       while (!citiesNotConnected.isEmpty()) {
         int r = -1, c = -1;
-        double maxReliability = 0;
+        /*
+         * The ratio reliability/(3*cost) helps the program construct the graph 
+         * such that all cities are connected with fairly good reliability without
+         * getting stuck by pre-consuming the cost budget
+         */
+        double maxRCRatio = 0;
         for (int connected : citiesConnected) {
           for (int candidate : citiesNotConnected) {
-            if (reliabilities[connected][candidate] > maxReliability) {
+            if (reliabilities[connected][candidate]/(3*costs[connected][candidate]) > maxRCRatio) {
               connections[connected][candidate]++;
               connections[candidate][connected]++;
+              // double temp = getTotalReliability(connections);
               if (getTotalCost(connections) <= req_C) {
-                maxReliability = reliabilities[connected][candidate];
+                // && temp > maxReliability) {
+                maxRCRatio = reliabilities[connected][candidate]/(3*costs[connected][candidate]);
                 r = citiesConnected.indexOf(connected);
                 c = citiesNotConnected.indexOf(candidate);
               }
@@ -128,35 +138,71 @@ public class CommunicationNetwork {
           }
         }
         if (r == -1 || c == -1) {
+          System.out.println("Current cost: " + getTotalCost(connections));
+          printMatrix(connections);
           /*
            * Inspired by simulated annealing, the program randomly re-orders the
            * graph when the greedy algorithm gets stuck by the reliability
            * requirement so that it can achive another local optimal solution
            */
           int index = (int) (Math.random() * 10000 % citiesConnected.size());
-          int removed = citiesConnected.remove(index);
+          int con = citiesConnected.get(index);
           for (int i = 0; i < numberOfCities; i++) {
-            connections[i][removed] = 0;
-            connections[removed][i] = 0;
+            if (connections[i][con] > 1) {
+              connections[i][con]--;
+              connections[con][i]--;
+              // System.out.println("incremented " + con);
+            }
           }
-          citiesNotConnected.add(removed);
           continue;
         }
         int temp = citiesNotConnected.remove(c);
+        System.out.println("connected " + temp + " and "
+            + citiesConnected.get(r));
         connections[citiesConnected.get(r)][temp]++;
         connections[temp][citiesConnected.get(r)]++;
         citiesConnected.add(temp);
       }
-      // Built the graph with one edge for each connection.
-      double lastReliability = getTotalReliability(connections);
+      System.out.println("Before optR: " + getTotalReliability(connections));
+      System.out.println("Before optC: " + getTotalCost(connections));
+      printMatrix(connections);
+      /*
+       * Once having Built the graph with one edge for each connection, the program
+       * optimizes the reliability of the graph in a greedy manner until the given
+       * cost budget is unusable.
+       */
+      int r, c;
       do {
+        r = -1;
+        c = -1;
+        double maxR = 0;
         for (int i = 0; i < numberOfCities; i++) {
           for (int j = i; j < numberOfCities; j++) {
             if (i == j) continue;
-            
+            if (connections[i][j] > 0 && connections[i][j] < 3) {
+              connections[i][j]++;
+              connections[j][i]++;
+              if (getTotalCost(connections) <= req_C) {
+                double temp = getTotalReliability(connections);
+                if (temp > maxR) {
+                  maxR = temp;
+                  r = i;
+                  c = j;
+                }
+              }
+              connections[i][j]--;
+              connections[j][i]--;
+            }
           }
         }
-      } while (false);
+        if (r != -1 && c != -1) {
+          connections[r][c]++;
+          connections[c][r]++;
+        }
+      } while (r != -1 && c != -1);
+      System.out.println("After optR: " + getTotalReliability(connections));
+      System.out.println("After optC: " + getTotalCost(connections));
+
       printMatrix(connections);
 
       System.out.print("Matrix Network = ");
