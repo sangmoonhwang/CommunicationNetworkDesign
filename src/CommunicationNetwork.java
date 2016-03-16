@@ -3,7 +3,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class CommunicationNetwork {
 
@@ -49,24 +48,20 @@ public class CommunicationNetwork {
         for (int connected : citiesConnected) {
           for (int candidate : citiesNotConnected) {
             if (costs[connected][candidate] < minCost) {
-              connections[connected][candidate] ++;
-              if (!(getTotalReliability(connections) < req_R)) {
+              connections[connected][candidate]++;
+              connections[candidate][connected]++;
+              if (getTotalReliability(connections) >= req_R) {
                 minCost = costs[connected][candidate];
                 r = citiesConnected.indexOf(connected);
                 c = citiesNotConnected.indexOf(candidate);
               }
+              connections[candidate][connected]--;
               connections[connected][candidate]--;
             }
           }
         }
         System.out.println("Not Con: " + citiesNotConnected.size());
         System.out.println("Con: " + citiesConnected.size());
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
         if (r == -1 || c == -1) {
           System.out.println("KEEMOTEE");
           int index = (int) (Math.random() * 10000 % citiesConnected.size());
@@ -83,36 +78,21 @@ public class CommunicationNetwork {
         connections[temp][citiesConnected.get(r)]++;
         citiesConnected.add(temp);
       }
-      
-      
-      
-//      int colIndex;
-//      for (int i = 0; i < numberOfCities; i++) {
-//        if (!citiesConnected.contains(i)) {
-//          citiesConnected.add(i);
-//        }
-//        colIndex = 0;
-//        for (int j = i; j < numberOfCities; j++) {
-//          if (i == j || citiesConnected.contains(j)) continue;
-//          if (costs[i][colIndex] >= costs[i][j]) {
-//            System.out.println("GOTMIN");
-//            if (connections[i][j] < 3) {
-//              connections[i][j]++;
-//              if (getTotalReliability(connections) < req_R) {
-//                System.out.println("RESET");
-//              } else {
-//                colIndex = j;
-//              }
-//              connections[i][j]--;
-//            }
-//          }
-//        }
-//        connections[i][colIndex]++;
-//        citiesConnected.add(colIndex);
-//      }
       printMatrix(connections);
-      System.out.println(getTotalCost(connections));
-      System.out.println(getTotalReliability(connections));
+
+      System.out.print("Matrix Network = ");
+      for (int i = 0; i < numberOfCities; i++) {
+        for (int j = i; j < numberOfCities; j++) {
+          if (i == j) continue;
+          System.out.print(connections[i][j]);
+          if (!(i == numberOfCities - 2 && j == numberOfCities - 1)) {
+            System.out.print(",");
+          }
+        }
+      }
+      System.out.println();
+      System.out.println("Cost = " + getTotalCost(connections));
+      System.out.println("Reliability = " + getTotalReliability(connections));
 
     } else if ("1".equals(a_b)) {
       // case b Max Rel.
