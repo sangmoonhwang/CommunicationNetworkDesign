@@ -46,34 +46,40 @@ public class CommunicationNetwork {
         int r = -1, c = -1;
         double minCost = Double.MAX_VALUE;
         for (int connected : citiesConnected) {
-          for (int candidate : citiesNotConnected) {
-            if (costs[connected][candidate] < minCost) {
-              connections[connected][candidate]++;
-              connections[candidate][connected]++;
+          for (int notConnected : citiesNotConnected) {
+            if (costs[connected][notConnected] < minCost) {
+              connections[connected][notConnected]++;
+              connections[notConnected][connected]++;
               if (getTotalReliability(connections) >= req_R) {
-                minCost = costs[connected][candidate];
+                minCost = costs[connected][notConnected];
                 r = citiesConnected.indexOf(connected);
-                c = citiesNotConnected.indexOf(candidate);
+                c = citiesNotConnected.indexOf(notConnected);
               }
-              connections[candidate][connected]--;
-              connections[connected][candidate]--;
+              connections[notConnected][connected]--;
+              connections[connected][notConnected]--;
             }
           }
         }
-        System.out.println("Not Con: " + citiesNotConnected.size());
-        System.out.println("Con: " + citiesConnected.size());
         if (r == -1 || c == -1) {
-          System.out.println("KEEMOTEE");
+          /*
+           * Inspired by simulated annealing, the program randomly re-orders the
+           * graph when the greedy algorithm gets stuck by the reliability
+           * requirement so that it can achive another local optimal solution
+           */
           int index = (int) (Math.random() * 10000 % citiesConnected.size());
-          int removed = citiesConnected.remove(index);
+          int con = citiesConnected.get(index);
           for (int i = 0; i < numberOfCities; i++) {
-            connections[i][removed] = 0;
-            connections[removed][i] = 0;
+            if (connections[i][con] != 0 && connections[i][con] < 3) { 
+              connections[i][con]++;
+              connections[con][i]++;
+            }
           }
-          citiesNotConnected.add(removed);
+//          citiesNotConnected.add(removed);
+          System.out.println("incremented " + con);
           continue;
         }
         int temp = citiesNotConnected.remove(c);
+        System.out.println("connected " + temp + " and " + citiesConnected.get(r));
         connections[citiesConnected.get(r)][temp]++;
         connections[temp][citiesConnected.get(r)]++;
         citiesConnected.add(temp);
@@ -91,11 +97,81 @@ public class CommunicationNetwork {
         }
       }
       System.out.println();
+      System.out.println(citiesConnected.size() + " and " + citiesNotConnected.size());
       System.out.println("Cost = " + getTotalCost(connections));
       System.out.println("Reliability = " + getTotalReliability(connections));
 
     } else if ("1".equals(a_b)) {
       // case b Max Rel.
+      ArrayList<Integer> citiesConnected = new ArrayList<Integer>();
+      ArrayList<Integer> citiesNotConnected = new ArrayList<Integer>();
+      for (int i = 0; i < numberOfCities; i++) {
+        citiesNotConnected.add(i);
+      }
+      citiesConnected.add(citiesNotConnected.remove(0));
+      while (!citiesNotConnected.isEmpty()) {
+        int r = -1, c = -1;
+        double maxReliability = 0;
+        for (int connected : citiesConnected) {
+          for (int candidate : citiesNotConnected) {
+            if (reliabilities[connected][candidate] > maxReliability) {
+              connections[connected][candidate]++;
+              connections[candidate][connected]++;
+              if (getTotalCost(connections) <= req_C) {
+                maxReliability = reliabilities[connected][candidate];
+                r = citiesConnected.indexOf(connected);
+                c = citiesNotConnected.indexOf(candidate);
+              }
+              connections[candidate][connected]--;
+              connections[connected][candidate]--;
+            }
+          }
+        }
+        if (r == -1 || c == -1) {
+          /*
+           * Inspired by simulated annealing, the program randomly re-orders the
+           * graph when the greedy algorithm gets stuck by the reliability
+           * requirement so that it can achive another local optimal solution
+           */
+          int index = (int) (Math.random() * 10000 % citiesConnected.size());
+          int removed = citiesConnected.remove(index);
+          for (int i = 0; i < numberOfCities; i++) {
+            connections[i][removed] = 0;
+            connections[removed][i] = 0;
+          }
+          citiesNotConnected.add(removed);
+          continue;
+        }
+        int temp = citiesNotConnected.remove(c);
+        connections[citiesConnected.get(r)][temp]++;
+        connections[temp][citiesConnected.get(r)]++;
+        citiesConnected.add(temp);
+      }
+      // Built the graph with one edge for each connection.
+      double lastReliability = getTotalReliability(connections);
+      do {
+        for (int i = 0; i < numberOfCities; i++) {
+          for (int j = i; j < numberOfCities; j++) {
+            if (i == j) continue;
+            
+          }
+        }
+      } while (false);
+      printMatrix(connections);
+
+      System.out.print("Matrix Network = ");
+      for (int i = 0; i < numberOfCities; i++) {
+        for (int j = i; j < numberOfCities; j++) {
+          if (i == j) continue;
+          System.out.print(connections[i][j]);
+          if (!(i == numberOfCities - 2 && j == numberOfCities - 1)) {
+            System.out.print(",");
+          }
+        }
+      }
+      System.out.println();
+      System.out.println("Cost = " + getTotalCost(connections));
+      System.out.println("Reliability = " + getTotalReliability(connections));
     } else {
       System.out.println("Wrong parameter a_b. It should either be 0 or 1");
     }
