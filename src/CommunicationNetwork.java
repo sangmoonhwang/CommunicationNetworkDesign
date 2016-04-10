@@ -23,10 +23,6 @@ public class CommunicationNetwork {
     System.out.println(req_C);
 
     int[][] connections = new int[numberOfCities][numberOfCities];
-    City[] cities = new City[numberOfCities];
-    for (int i = 0; i < cities.length; i++) {
-      cities[i] = new City(i);
-    }
     printMatrix(costs);
     printMatrix(reliabilities);
     for (int i = 0; i < numberOfCities; i++) {
